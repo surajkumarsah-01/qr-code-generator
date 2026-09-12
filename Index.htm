@@ -1,0 +1,224 @@
+```html
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced QR Code Generator</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+        input[type="color"]::-webkit-color-swatch {
+            border: none;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between p-4 md:p-8">
+
+    <header class="max-w-xl mx-auto w-full text-center my-4">
+        <h1 class="text-3xl font-extrabold text-sky-400 tracking-tight sm:text-4xl">QR Code Generator Pro</h1>
+        <p class="text-slate-400 text-sm mt-1">अपने लिंक, मैसेज या डेटा के लिए तुरंत कस्टम QR कोड बनाएं</p>
+    </header>
+
+    <main class="max-w-xl mx-auto w-full space-y-6">
+        
+        <!-- Main Form Card -->
+        <div class="glass-card rounded-2xl p-5 md:p-6 shadow-2xl">
+            
+            <!-- Quick Presets -->
+            <div class="mb-5">
+                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Quick Presets</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="setPreset('url')" class="py-2 px-3 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition active:scale-95">🌐 Website URL</button>
+                    <button onclick="setPreset('whatsapp')" class="py-2 px-3 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition active:scale-95">💬 WhatsApp Link</button>
+                    <button onclick="setPreset('wifi')" class="py-2 px-3 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition active:scale-95">📶 WiFi Format</button>
+                </div>
+            </div>
+
+            <!-- Input Text / URL -->
+            <div class="mb-5">
+                <label for="qrInput" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Content / URL</label>
+                <textarea id="qrInput" rows="3" placeholder="यहाँ वेबसाइट का लिंक या कोई भी मैसेज टाइप करें..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm resize-none"></textarea>
+            </div>
+
+            <!-- Customization Options -->
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Foreground Color</label>
+                    <div class="flex items-center space-x-2 bg-slate-900 border border-slate-700 p-2 rounded-xl">
+                        <input type="color" id="fgColor" value="#000000" class="w-8 h-8 rounded cursor-pointer bg-transparent">
+                        <span id="fgColorValue" class="text-xs text-slate-300 font-mono">#000000</span>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Background Color</label>
+                    <div class="flex items-center space-x-2 bg-slate-900 border border-slate-700 p-2 rounded-xl">
+                        <input type="color" id="bgColor" value="#ffffff" class="w-8 h-8 rounded cursor-pointer bg-transparent">
+                        <span id="bgColorValue" class="text-xs text-slate-300 font-mono">#ffffff</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Button -->
+            <button onclick="generateQRCode()" class="w-full py-3.5 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold rounded-xl shadow-lg shadow-sky-500/20 transition active:scale-95 text-base">
+                ✨ Create QR Code
+            </button>
+        </div>
+
+        <!-- Output Canvas & Result Box -->
+        <div id="outputSection" class="glass-card rounded-2xl p-6 text-center shadow-2xl hidden">
+            <div class="flex justify-center mb-4">
+                <div class="p-4 bg-white rounded-xl shadow-inner inline-block">
+                    <img id="qrImage" class="w-48 h-48 md:w-56 md:h-56 mx-auto object-contain hidden" alt="QR Code Output">
+                    <canvas id="qrCanvas" class="w-48 h-48 md:w-56 md:h-56 mx-auto"></canvas>
+                </div>
+            </div>
+
+            <!-- Download Button -->
+            <button onclick="downloadQR()" class="w-full sm:w-auto px-6 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition active:scale-95 text-sm inline-flex items-center justify-center space-x-2">
+                <span>⬇️ Download PNG Image</span>
+            </button>
+        </div>
+
+        <!-- History Section -->
+        <div class="glass-card rounded-2xl p-5 md:p-6 shadow-2xl">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="text-sm font-semibold text-slate-300">Recently Generated QR History</h3>
+                <button onclick="clearHistory()" class="text-xs text-rose-400 hover:underline">Clear All</button>
+            </div>
+            <div id="historyList" class="space-y-2 max-h-40 overflow-y-auto pr-1 text-xs text-slate-400">
+                <p class="text-slate-500 italic">कोई पिछला रिकॉर्ड नहीं मिला।</p>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="max-w-xl mx-auto w-full text-center py-4 text-xs text-slate-500">
+        Created for GitHub Deployment • Fully Offline & Mobile Responsive
+    </footer>
+
+    <script>
+        // Synchronize Color Pickers Display
+        document.getElementById('fgColor').addEventListener('input', (e) => {
+            document.getElementById('fgColorValue').innerText = e.target.value;
+        });
+        document.getElementById('bgColor').addEventListener('input', (e) => {
+            document.getElementById('bgColorValue').innerText = e.target.value;
+        });
+
+        // Set Preset Templates
+        function setPreset(type) {
+            const input = document.getElementById('qrInput');
+            if (type === 'url') {
+                input.value = 'https://github.com';
+            } else if (type === 'whatsapp') {
+                input.value = 'https://wa.me/919876543210?text=Hello!';
+            } else if (type === 'wifi') {
+                input.value = 'WIFI:S:MyWifiNetwork;P:MyPassword123;T:WPA;;';
+            }
+        }
+
+        // Generate QR Code Action using public standard fallback or Canvas
+        function generateQRCode() {
+            const text = document.getElementById('qrInput').value.trim();
+            const fg = document.getElementById('fgColor').value;
+            const bg = document.getElementById('bgColor').value;
+
+            if (!text) {
+                alert('कृपया कोई पाठ या यूआरएल दर्ज करें!');
+                return;
+            }
+
+            const outputSection = document.getElementById('outputSection');
+            const qrCanvas = document.getElementById('qrCanvas');
+            const qrImage = document.getElementById('qrImage');
+
+            // Encode hex values for URL safety
+            const fgClean = fg.replace('#', '');
+            const bgClean = bg.replace('#', '');
+
+            // High resolution QR API source
+            const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(text)}&color=${fgClean}&bgcolor=${bgClean}`;
+
+            qrImage.onload = function() {
+                // Draw Image into Canvas to allow easy download
+                const ctx = qrCanvas.getContext('2d');
+                qrCanvas.width = 300;
+                qrCanvas.height = 300;
+                ctx.drawImage(qrImage, 0, 0, 300, 300);
+            };
+
+            qrImage.src = qrApiUrl;
+            outputSection.classList.remove('hidden');
+
+            // Save to Local History
+            saveToHistory(text);
+        }
+
+        // Download PNG Image
+        function downloadQR() {
+            const canvas = document.getElementById('qrCanvas');
+            const link = document.createElement('a');
+            link.download = 'qrcode.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        // Local Storage History Management
+        function saveToHistory(text) {
+            let history = JSON.parse(localStorage.getItem('qr_history') || '[]');
+            if (!history.includes(text)) {
+                history.unshift(text);
+                if (history.length > 5) history.pop(); // Keep last 5
+                localStorage.setItem('qr_history', JSON.stringify(history));
+                renderHistory();
+            }
+        }
+
+        function renderHistory() {
+            const historyList = document.getElementById('historyList');
+            let history = JSON.parse(localStorage.getItem('qr_history') || '[]');
+
+            if (history.length === 0) {
+                historyList.innerHTML = '<p class="text-slate-500 italic">कोई पिछला रिकॉर्ड नहीं मिला।</p>';
+                return;
+            }
+
+            historyList.innerHTML = history.map(item => `
+                <div class="p-2 bg-slate-900 rounded-lg border border-slate-800 flex justify-between items-center">
+                    <span class="truncate max-w-[240px] text-slate-300">${item}</span>
+                    <button onclick="loadFromHistory('${encodeURIComponent(item)}')" class="text-sky-400 hover:underline text-xs">Use</button>
+                </div>
+            `).join('');
+        }
+
+        function loadFromHistory(encodedText) {
+            document.getElementById('qrInput').value = decodeURIComponent(encodedText);
+            generateQRCode();
+        }
+
+        function clearHistory() {
+            localStorage.removeItem('qr_history');
+            renderHistory();
+        }
+
+        // Initialize history on load
+        window.onload = renderHistory;
+    </script>
+</body>
+</html>
+```
